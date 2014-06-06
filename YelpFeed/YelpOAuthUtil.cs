@@ -17,8 +17,6 @@ namespace YelpFeed
             _oauthTokenSecret = oauthTokenSecret;
         }
 
-        public int CacheDuration { get; set; }
-        public bool CacheResponse { get; set; }
         private const string BUSINESS_URL = "http://api.yelp.com/v2/business/";
         private const string SEARCH_URL = "http://api.yelp.com/v2/search";
         private readonly string _oauthConsumerKey;
