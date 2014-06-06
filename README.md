@@ -9,6 +9,6 @@ __Requirements__:
 
 * [Newtonsoft.Json]
 
-##Sample Application
+##Sample
 
 You can look at the unit test for some samples on how to use it
