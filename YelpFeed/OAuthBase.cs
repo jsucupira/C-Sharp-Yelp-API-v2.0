@@ -14,7 +14,7 @@ namespace YelpFeed
         /// <summary>
         ///     Provides a predefined set of algorithms that are supported officially by the protocol
         /// </summary>
-        protected enum SignatureTypes
+        public enum SignatureTypes
         {
             Hmacsha1,
             Plaintext,
@@ -22,26 +22,26 @@ namespace YelpFeed
         }
 
         protected const string OAuthVersion = "1.0";
-        private const string O_AUTH_PARAMETER_PREFIX = "oauth_";
+        protected const string OAuthParameterPrefix = "oauth_";
 
         //
         // List of know and used oauth parameters' names
         //        
-        private const string O_AUTH_CONSUMER_KEY_KEY = "oauth_consumer_key";
+        protected const string OAuthConsumerKeyKey = "oauth_consumer_key";
         protected const string OAuthCallbackKey = "oauth_callback";
-        private const string O_AUTH_VERSION_KEY = "oauth_version";
-        private const string O_AUTH_SIGNATURE_METHOD_KEY = "oauth_signature_method";
+        protected const string OAuthVersionKey = "oauth_version";
+        protected const string OAuthSignatureMethodKey = "oauth_signature_method";
         protected const string OAuthSignatureKey = "oauth_signature";
-        private const string O_AUTH_TIMESTAMP_KEY = "oauth_timestamp";
-        private const string O_AUTH_NONCE_KEY = "oauth_nonce";
-        private const string O_AUTH_TOKEN_KEY = "oauth_token";
+        protected const string OAuthTimestampKey = "oauth_timestamp";
+        protected const string OAuthNonceKey = "oauth_nonce";
+        protected const string OAuthTokenKey = "oauth_token";
         protected const string OAuthTokenSecretKey = "oauth_token_secret";
 
         protected const string Hmacsha1SignatureType = "HMAC-SHA1";
         protected const string PlainTextSignatureType = "PLAINTEXT";
         protected const string Rsasha1SignatureType = "RSA-SHA1";
 
-        private const string UNRESERVED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~";
+        protected const string UnreservedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~";
         protected readonly Random Random = new Random();
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace YelpFeed
         /// <param name="normalizedRequestParameters"></param>
         /// <param name="timeStamp"></param>
         /// <returns>A base64 string of the hash value</returns>
-        protected string GenerateSignature(Uri url, string consumerKey, string consumerSecret, string token, string tokenSecret, string httpMethod, string timeStamp, string nonce, SignatureTypes signatureType, out string normalizedUrl,
+        private string GenerateSignature(Uri url, string consumerKey, string consumerSecret, string token, string tokenSecret, string httpMethod, string timeStamp, string nonce, SignatureTypes signatureType, out string normalizedUrl,
             out string normalizedRequestParameters)
         {
             normalizedUrl = null;
@@ -123,7 +123,7 @@ namespace YelpFeed
                 case SignatureTypes.Plaintext:
                     return HttpUtility.UrlEncode(string.Format("{0}&{1}", consumerSecret, tokenSecret));
                 case SignatureTypes.Hmacsha1:
-                    string signatureBase = GenerateSignatureBase(url, consumerKey, token, httpMethod, timeStamp, nonce, Hmacsha1SignatureType, out normalizedUrl, out normalizedRequestParameters);
+                    string signatureBase = GenerateSignatureBase(url, consumerKey, token, tokenSecret, httpMethod, timeStamp, nonce, Hmacsha1SignatureType, out normalizedUrl, out normalizedRequestParameters);
 
                     using (HMACSHA1 hmacsha1 = new HMACSHA1())
                     {
@@ -143,6 +143,7 @@ namespace YelpFeed
         /// <param name="url">The full url that needs to be signed including its non OAuth url parameters</param>
         /// <param name="consumerKey">The consumer key</param>
         /// <param name="token">The token, if available. If not available pass null or an empty string</param>
+        /// <param name="tokenSecret">The token secret, if available. If not available pass null or an empty string</param>
         /// <param name="httpMethod">The http method used. Must be a valid HTTP method verb (POST,GET,PUT, etc)</param>
         /// <param name="nonce"></param>
         /// <param name="signatureType">
@@ -153,7 +154,7 @@ namespace YelpFeed
         /// <param name="normalizedRequestParameters"></param>
         /// <param name="timeStamp"></param>
         /// <returns>The signature base</returns>
-        private static string GenerateSignatureBase(Uri url, string consumerKey, string token, string httpMethod, string timeStamp, string nonce, string signatureType, out string normalizedUrl,
+        private static string GenerateSignatureBase(Uri url, string consumerKey, string token, string tokenSecret, string httpMethod, string timeStamp, string nonce, string signatureType, out string normalizedUrl,
             out string normalizedRequestParameters)
         {
             if (token == null)
@@ -169,14 +170,14 @@ namespace YelpFeed
                 throw new ArgumentNullException("signatureType");
 
             List<QueryParameter> parameters = GetQueryParameters(url.Query);
-            parameters.Add(new QueryParameter(O_AUTH_VERSION_KEY, OAuthVersion));
-            parameters.Add(new QueryParameter(O_AUTH_NONCE_KEY, nonce));
-            parameters.Add(new QueryParameter(O_AUTH_TIMESTAMP_KEY, timeStamp));
-            parameters.Add(new QueryParameter(O_AUTH_SIGNATURE_METHOD_KEY, signatureType));
-            parameters.Add(new QueryParameter(O_AUTH_CONSUMER_KEY_KEY, consumerKey));
+            parameters.Add(new QueryParameter(OAuthVersionKey, OAuthVersion));
+            parameters.Add(new QueryParameter(OAuthNonceKey, nonce));
+            parameters.Add(new QueryParameter(OAuthTimestampKey, timeStamp));
+            parameters.Add(new QueryParameter(OAuthSignatureMethodKey, signatureType));
+            parameters.Add(new QueryParameter(OAuthConsumerKeyKey, consumerKey));
 
             if (!string.IsNullOrEmpty(token))
-                parameters.Add(new QueryParameter(O_AUTH_TOKEN_KEY, token));
+                parameters.Add(new QueryParameter(OAuthTokenKey, token));
 
             parameters.Sort(new QueryParameterComparer());
 
@@ -236,7 +237,7 @@ namespace YelpFeed
                 string[] p = parameters.Split('&');
                 foreach (string s in p)
                 {
-                    if (!string.IsNullOrEmpty(s) && !s.StartsWith(O_AUTH_PARAMETER_PREFIX))
+                    if (!string.IsNullOrEmpty(s) && !s.StartsWith(OAuthParameterPrefix))
                     {
                         if (s.IndexOf('=') > -1)
                         {
@@ -276,19 +277,26 @@ namespace YelpFeed
         ///     This is a different Url Encode implementation since the default .NET one outputs the percent encoding in lower
         ///     case.
         ///     While this is not a problem with the percent encoding spec, it is used in upper case throughout OAuth
+        /// 
+        ///     JS: I am not sure why, but for comman the encoding this was generating was %2C, but Oauth is expecting %252C
         /// </summary>
         /// <param name="value">The value to Url encode</param>
         /// <returns>Returns a Url encoded string</returns>
-        private static string UrlEncode(string value)
+        protected static string UrlEncode(string value)
         {
             StringBuilder result = new StringBuilder();
 
             foreach (char symbol in value)
             {
-                if (UNRESERVED_CHARS.IndexOf(symbol) != -1)
+                if (UnreservedChars.IndexOf(symbol) != -1)
                     result.Append(symbol);
                 else
-                    result.Append('%' + String.Format("{0:X2}", (int) symbol));
+                {
+                    if (symbol == ',')
+                        result.Append("%252C");
+                    else
+                        result.Append('%' + String.Format("{0:X2}", (int)symbol));
+                }
             }
 
             return result.ToString();
@@ -299,9 +307,6 @@ namespace YelpFeed
         /// </summary>
         protected class QueryParameter
         {
-            private readonly string _name;
-            private readonly string _value;
-
             public QueryParameter(string name, string value)
             {
                 _name = name;
@@ -317,12 +322,15 @@ namespace YelpFeed
             {
                 get { return _value; }
             }
+
+            private readonly string _name;
+            private readonly string _value;
         }
 
         /// <summary>
         ///     Comparer class used to perform the sorting of the query parameters
         /// </summary>
-        private class QueryParameterComparer : IComparer<QueryParameter>
+        protected class QueryParameterComparer : IComparer<QueryParameter>
         {
             #region IComparer<QueryParameter> Members
 
