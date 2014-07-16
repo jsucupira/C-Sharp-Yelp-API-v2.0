@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using YelpFeed.BusinessApi;
 using YelpFeed.SearchApi;
@@ -41,24 +44,23 @@ namespace YelpFeed
             // make the request
 
             ServicePointManager.Expect100Continue = false;
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.Headers.Add("Authorization", authHeader);
             request.Method = "GET";
             request.ContentType = "application/x-www-form-urlencoded";
 
-            using (WebResponse response = request.GetResponse())
+            using (HttpClient httpClient = new HttpClient())
             {
-                HttpWebResponse status = (HttpWebResponse) response;
-                if (HttpStatusCode.OK == status.StatusCode)
-                {
-                    using (StreamReader stream = new StreamReader(response.GetResponseStream()))
-                    {
-                        YelpBusinessObject result = JsonConvert.DeserializeObject<YelpBusinessObject>(stream.ReadToEnd());
-                        return result;
-                    }
-                }
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
+
+                var response = httpClient.GetAsync(url).Result;
+                var result = response.Content.ReadAsStringAsync().Result;
+                if (response.IsSuccessStatusCode)
+                    return JsonConvert.DeserializeObject<YelpBusinessObject>(result);
+                else
+                    throw new HttpRequestException(result);
             }
-            return null;
         }
 
         /// <summary>
@@ -80,21 +82,18 @@ namespace YelpFeed
 
             ServicePointManager.Expect100Continue = false;
 
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-            request.Headers.Add("Authorization", authHeader);
-            request.Method = "GET";
-            request.ContentType = "application/x-www-form-urlencoded";
-
-            using (WebResponse response = request.GetResponse())
+            using (HttpClient httpClient = new HttpClient())
             {
-                HttpWebResponse status = (HttpWebResponse) response;
-                if (HttpStatusCode.OK == status.StatusCode)
-                {
-                    using (StreamReader stream = new StreamReader(response.GetResponseStream()))
-                        return stream.ReadToEnd();
-                }
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
+
+                var response = httpClient.GetAsync(url).Result;
+                var result = response.Content.ReadAsStringAsync().Result;
+                if (response.IsSuccessStatusCode)
+                    return result;
+
+                return result;
             }
-            return null;
         }
 
         /// <summary>
@@ -112,24 +111,19 @@ namespace YelpFeed
             // make the request
 
             ServicePointManager.Expect100Continue = false;
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-            request.Headers.Add("Authorization", authHeader);
-            request.Method = "GET";
-            request.ContentType = "application/x-www-form-urlencoded";
 
-            using (WebResponse response = request.GetResponse())
+            using (HttpClient httpClient = new HttpClient())
             {
-                HttpWebResponse status = (HttpWebResponse) response;
-                if (HttpStatusCode.OK == status.StatusCode)
-                {
-                    using (StreamReader stream = new StreamReader(response.GetResponseStream()))
-                    {
-                        string result = stream.ReadToEnd();
-                        return JsonConvert.DeserializeObject<YelpSearchObject>(result);
-                    }
-                }
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
+
+                var response = httpClient.GetAsync(url).Result;
+                var result = response.Content.ReadAsStringAsync().Result;
+                if (response.IsSuccessStatusCode)
+                    return JsonConvert.DeserializeObject<YelpSearchObject>(result);
+                else
+                    throw new HttpRequestException(result);
             }
-            return null;
         }
 
         /// <summary>
@@ -146,21 +140,19 @@ namespace YelpFeed
             // make the request
 
             ServicePointManager.Expect100Continue = false;
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-            request.Headers.Add("Authorization", authHeader);
-            request.Method = "GET";
-            request.ContentType = "application/x-www-form-urlencoded";
 
-            using (WebResponse response = request.GetResponse())
+            using (HttpClient httpClient = new HttpClient())
             {
-                HttpWebResponse status = (HttpWebResponse) response;
-                if (HttpStatusCode.OK == status.StatusCode)
-                {
-                    using (StreamReader stream = new StreamReader(response.GetResponseStream()))
-                        return stream.ReadToEnd();
-                }
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
+
+                var response = httpClient.GetAsync(url).Result;
+                var result = response.Content.ReadAsStringAsync().Result;
+                if (response.IsSuccessStatusCode)
+                    return result;
+
+                return result;
             }
-            return null;
         }
 
         #region private methods
