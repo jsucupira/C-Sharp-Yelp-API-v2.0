@@ -25,7 +25,8 @@ namespace YelpFeed.Test
         {
             YelpOAuthUtil result = new YelpOAuthUtil(_consumerKey, _consumerSecret, _token, _tokenSecret);
             var yelpJson = result.SearchApiJson("term=food&location=Tampa&state=FL");
-Assert.IsTrue(!string.IsNullOrEmpty(yelpJson));        }
+            Assert.IsTrue(!string.IsNullOrEmpty(yelpJson));
+        }
 
         [TestMethod]
         public void test_yelp_business()
